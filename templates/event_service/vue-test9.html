@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block main %}
+
+<h4  class="text-center">Event Management Page</h4>
+<center>
+    <p></p>
+    <p>Welcome to our Event Control Center!</p>
+    <p>Here you can manage your events.</p>
+
+<div id="vue-app">
+    [[ message ]]
+</div>
+
+</center>
+<div id="events"></div>
+
+<script>
+
+    var cryptoEvents;
+    var userAccount;
+
+    var app = new Vue({
+        delimiters: ["[[", "]]"],
+        el: '#vue-app',
+        data: {
+            message: 'Hi'
+        }
+    })
+
+    async function getSignerAddress(provider) {
+        console.log('calling');
+        //const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const result = await signer.getAddress( );
+        console.log(result);
+        //return result;
+        // expected output: "resolved"
+    }
+
+    async function getInfo() {
+        // A Web3Provider wraps a standard Web3 provider, which is
+        // what Metamask injects as window.ethereum into each page
+        const provider = await new ethers.providers.Web3Provider(window.ethereum)
+        // The provider also allows signing transactions to
+        // send ether and pay to change state within the blockchain.
+        // For this, we need the account signer...
+        const signer = provider.getSigner();
+        console.log(signer);
+        //console.log(provider.getBlockNumber());
+        const signerAddress = await signer.getAddress( );
+        //let balance = await getBal(signerAddress);
+        console.log(signerAddress);
+        const network = await provider.getNetwork( );
+        console.log(network);
+        // Get the balance of an account (by address or ENS name, if supported by network)
+        let balance = await provider.getBalance(signerAddress);
+        let balanceEth = ethers.utils.formatEther(balance);
+        console.log(balanceEth);
+        app.message = String(signerAddress) + ' Network: ' + network.name.toUpperCase() + '. Balance: ' + String(balanceEth) + ' ETH';
+        //getSignerAddress(provider);
+    }
+
+    // Modern DApp Browsers
+    if (window.ethereum) {
+        web3 = new Web3(window.ethereum);
+        try {
+            window.ethereum.enable().then(function() {
+                console.log('User has allowed account access to DApp...');
+                getInfo();
+            });
+        } catch(e) {
+            console.log('User has denied account access to DApp...');
+        }
+    }
+// Legacy DApp Browsers
+    else if (window.web3) {
+        web3 = new Web3(web3.currentProvider);
+        console.log('Legacy DApp Browsers');
+        getInfo();
+    }
+// Non-DApp Browsers
+    else {
+        console.log('Non-DApp Browsers');
+        alert('You have to install MetaMask !');
+    }
+
+</script>
+
+{% endblock %}

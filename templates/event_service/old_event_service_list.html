@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block main %}
+
+    <h4  class="text-center">Event Management Page</h4>
+    <center>
+        <p></p>
+        <p>Welcome to our Event Control Center!</p>
+        <p>Here you can manage your events.</p>
+    </center>
+
+    <div id="events"></div>
+    <script>
+        var cryptoEvents;
+        var userAccount;
+
+        function startApp() {
+            var ticketOfficeAddress = "0xe6d64290F14b1CEEACea13801FE39adE6492002a";
+            cryptoEvents = new web3js.eth.Contract(eventServiceABI, ticketOfficeAddress);
+
+            var accountInterval = setInterval(function() {
+                // Check if account has changed
+                if (web3.eth.accounts[0] !== userAccount) {
+                    userAccount = web3.eth.accounts[0];
+                    // Call a function to update the UI with the new account
+                    getEventsByOwner(userAccount)
+                        .then(displayEvents);
+                }
+            }, 100);
+        }
+
+        function displayEvents(ids) {
+            $("#events").empty();
+            for (id of ids) {
+                // Look up zombie details from our contract. Returns a `event` object
+                getEventDetails(id)
+                    .then(function(event) {
+                        // Using ES6's "template literals" to inject variables into the HTML.
+                        // Append each one to our #zombies div
+                        $("#events").append(`<div class="event">
+              <ul>
+                <li>Name: ${event.name}</li>
+                <li>Description: ${event.description}</li>
+                <li>Location: ${event.location}</li>
+                <li>Start Date: ${event.startDate}</li>
+                <li>End Date: ${event.endDate}</li>
+                <li>Ticket Price: ${event.ticketPrice}</li>
+              </ul>
+            </div>`);
+                    });
+            }
+        }
+
+        function getEventDetails(id) {
+            return cryptoEvents.methods.events(id).call()
+        }
+
+        function eventToOwner(id) {
+            return cryptoEvents.methods.EventToOwner(id).call()
+        }
+
+        function getEventsByOwner(owner) {
+            return cryptoEvent.methods.getEventsByOwner(owner).call()
+        }
+
+        window.addEventListener('load', function() {
+
+            // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+            if (typeof web3 !== 'undefined') {
+                // Use Mist/MetaMask's provider
+                web3js = new Web3(web3.currentProvider);
+            } else {
+                console.log('Install Metamask');
+                // Handle the case where the user doesn't have Metamask installed
+                // Probably show them a message prompting them to install Metamask
+            }
+
+            // Now you can start your app & access web3 freely:
+            startApp()
+
+        })
+    </script>
+    <!-- <p><center><a  href="{% url 'event_service' %}"><b>refresh the page</b></a></center></p> -->
+
+{% endblock %}

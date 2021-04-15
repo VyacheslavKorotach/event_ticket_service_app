@@ -1,0 +1,28 @@
+<!doctype  html>
+<html  lang="en">
+<head>
+    <link  rel="stylesheet"  href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"  integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"  crossorigin="anonymous">
+    <title>Event Services</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script language="javascript" type="text/javascript" src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"
+            type="application/javascript"></script>
+    <script language="javascript" type="text/javascript" src="http://korotach.com/web3-test/event_service_abi.js"></script>
+    <!-- development version, includes helpful console warnings -->
+</head>
+<body>
+<div  class="container">
+    <div  class="row justify-content-center">
+        <div  class="col-5">
+            <h1  class="text-center">Event Service</h1>
+            <!-- <h4  class="text-center">Event Tickets Office</h4> -->
+            {% block main %}
+            {% endblock %}
+            <p>  </p>
+            <p><center><a  href="{% url 'index' %}"><b>Home</b></a></center></p>
+        </div>
+    </div>
+</div>
+</body>
+</html>
