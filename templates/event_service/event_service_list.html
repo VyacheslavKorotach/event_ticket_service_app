@@ -6,41 +6,54 @@
         <p></p>
         <p>Welcome to our Event Control Center!</p>
         <p>Here you can manage your events.</p>
-
+    </center>
+    <p><b>Your current address detected as:</b></p>
+    <center>
         <div id="vue-app">
             [[ message ]]
         </div>
 
     </center>
-    <div id="events"></div>
+
+    <p></p>
+    <p><b>Your event IDs: </b></p>
+
+    <div id="your_event_list">
+        <ol>
+            <li v-for="event in events">
+                <b>[[ event.text ]]</b>
+                <!--<a :href="'/job/' + r.id">[[ event.text ]]</a>-->
+                <a :href="'/event_service/details/?eventId=' + event.text"><b>details</b></a>
+            </li>
+        </ol>
+    </div>
 
     <script>
-
-        var cryptoEvents;
-        var userAccount;
 
         var app = new Vue({
             delimiters: ["[[", "]]"],
             el: '#vue-app',
             data: {
-                message: 'Hi'
+                message: 'Not detected. Refresh page and connect to Metamask.'
             }
         })
 
-        async function getSignerAddress(provider) {
-            console.log('calling');
-            //const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const signer = provider.getSigner();
-            const result = await signer.getAddress( );
-            console.log(result);
-            //return result;
-            // expected output: "resolved"
-        }
+        var your_event_list = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#your_event_list',
+            data: {
+                events: [
+                   // { text: 'Learn JavaScript' },
+                   // { text: 'Learn Vue' },
+                   // { text: 'Build something awesome' }
+                ],
+            }
+        })
 
         async function getInfo() {
             // A Web3Provider wraps a standard Web3 provider, which is
             // what Metamask injects as window.ethereum into each page
-            const provider = await new ethers.providers.Web3Provider(window.ethereum)
+            const provider = await new ethers.providers.Web3Provider(window.ethereum);
             // The provider also allows signing transactions to
             // send ether and pay to change state within the blockchain.
             // For this, we need the account signer...
@@ -57,7 +70,32 @@
             let balanceEth = ethers.utils.formatEther(balance);
             console.log(balanceEth);
             app.message = String(signerAddress) + ' Network: ' + network.name.toUpperCase() + '. Balance: ' + String(balanceEth) + ' ETH';
-            //getSignerAddress(provider);
+        }
+
+        async function getMyEvents() {
+            const provider = await new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            const signerAddress = await signer.getAddress( );
+            const ticketOfficeAddress = "0xeD0eCBeD8269f54DB2882a6Eb00597644C775b44";
+            const ticketOfficeAbi = eventServiceABI;
+            const ticketOfficeContract = new ethers.Contract(ticketOfficeAddress, ticketOfficeAbi, provider);
+            const myEventList = await ticketOfficeContract.getOwnerEvents(signerAddress);
+            //console.log(ticketOfficeAbi);
+            console.log(myEventList);
+            for(let i=0; i<myEventList.length; i++) {
+                your_event_list.events.push({ text: String(myEventList[i]) });
+            }
+        }
+
+        async function createNewEvent() {
+            const provider = await new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            const signerAddress = await signer.getAddress( );
+            const ticketOfficeAddress = "0xeD0eCBeD8269f54DB2882a6Eb00597644C775b44";
+            const ticketOfficeAbi = eventServiceABI;
+            const ticketOfficeContract = new ethers.Contract(ticketOfficeAddress, ticketOfficeAbi, provider);
+            const contractWithSigner = ticketOfficeContract.connect(signer);
+            const tx = contractWithSigner.createNewEvent("event5", "descr5", "location5", "startDate5", "endDate5", 100, "10");
         }
 
         // Modern DApp Browsers
@@ -67,6 +105,8 @@
                 window.ethereum.enable().then(function() {
                     console.log('User has allowed account access to DApp...');
                     getInfo();
+                    getMyEvents();
+                    //createNewEvent();
                 });
             } catch(e) {
                 console.log('User has denied account access to DApp...');
@@ -77,6 +117,7 @@
             web3 = new Web3(web3.currentProvider);
             console.log('Legacy DApp Browsers');
             getInfo();
+            getMyEvents();
         }
 // Non-DApp Browsers
         else {

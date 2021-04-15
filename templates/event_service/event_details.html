@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% block main %}
+
+    <h4 class="text-center">Event Management Page</h4>
+    <center>
+        <p></p>
+        <p>Welcome to our Event Control Center!</p>
+        <p>Here you can see the details of the event,
+            buy the ticket to the event or withdraw money
+            if you are the Event Organizer.</p>
+    </center>
+    <p><b>Your current address detected as:</b></p>
+    <center>
+        <div id="vue-app">
+            [[ message ]]
+        </div>
+
+    </center>
+
+    <p></p>
+    <p><b>The event details: </b></p>
+    <table cellpadding="5" , align="center">
+        <tr>
+            <td>
+                <div id="vue-eventId"><b>Event ID: </b><i> [[ message ]] </i></div>
+            </td>
+            <td>
+                <div id="vue-name"><b>Name: </b><i>[[ message ]]</i></div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div id="vue-description"><b>Description: </b><i>[[ message ]]</i></div>
+            </td>
+            <td>
+                <div id="vue-location"><b>Location: </b><i>[[ message ]]</i></div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div id="vue-startDate"><b>Start Date: </b><i>[[ message ]]</i></div>
+            </td>
+            <td>
+                <div id="vue-endDate"><b>End Date: </b><i>[[ message ]]</i></div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div id="vue-ticketPrice"><b>Ticket Price: </b><i>[[ message ]]</i></div>
+            </td>
+            <td>
+                <div id="vue-totalTickets"><b>Total Ticket: </b><i>[[ message ]]</i></div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div id="vue-ticketsSold"><b>Ticket Sold: </b><i>[[ message ]]</i></div>
+            </td>
+            <td>
+                <div id="vue-isCanceled"><b>Event Canceled: </b><i>[[ message ]]</i></div>
+            </td>
+        </tr>
+    </table>
+    <script>
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const eventId = urlParams.get('eventId');
+
+        var app = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-app',
+            data: {
+                message: 'Not detected. Refresh page and connect to Metamask.'
+            }
+        })
+
+        var vueEventId = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-eventId',
+            data: {
+                message: ''
+            }
+        })
+
+        var eventName = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-name',
+            data: {
+                message: ''
+            }
+        })
+
+        var eventDescription = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-description',
+            data: {
+                message: ''
+            }
+        })
+
+        var eventLocation = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-location',
+            data: {
+                message: ''
+            }
+        })
+
+        var eventStartDate = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-startDate',
+            data: {
+                message: ''
+            }
+        })
+
+        var eventEndDate = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-endDate',
+            data: {
+                message: ''
+            }
+        })
+
+        var eventTicketPrice = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-ticketPrice',
+            data: {
+                message: ''
+            }
+        })
+
+        var eventTotalTickets = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-totalTickets',
+            data: {
+                message: ''
+            }
+        })
+
+        var eventTicketsSold = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-ticketsSold',
+            data: {
+                message: ''
+            }
+        })
+
+        var eventIsCanceled = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-isCanceled',
+            data: {
+                message: ''
+            }
+        })
+
+        async function getInfo() {
+            // A Web3Provider wraps a standard Web3 provider, which is
+            // what Metamask injects as window.ethereum into each page
+            const provider = await new ethers.providers.Web3Provider(window.ethereum);
+            // The provider also allows signing transactions to
+            // send ether and pay to change state within the blockchain.
+            // For this, we need the account signer...
+            const signer = provider.getSigner();
+            console.log(signer);
+            //console.log(provider.getBlockNumber());
+            const signerAddress = await signer.getAddress();
+            //let balance = await getBal(signerAddress);
+            console.log(signerAddress);
+            const network = await provider.getNetwork();
+            console.log(network);
+            // Get the balance of an account (by address or ENS name, if supported by network)
+            let balance = await provider.getBalance(signerAddress);
+            let balanceEth = ethers.utils.formatEther(balance);
+            console.log(balanceEth);
+            app.message = String(signerAddress) + ' Network: ' + network.name.toUpperCase() + '. Balance: ' + String(balanceEth) + ' ETH';
+            console.log(eventId);
+        }
+
+        async function getEventDetails() {
+            const provider = await new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            const signerAddress = await signer.getAddress();
+            const ticketOfficeAddress = "0xeD0eCBeD8269f54DB2882a6Eb00597644C775b44";
+            const ticketOfficeAbi = eventServiceABI;
+            const ticketOfficeContract = new ethers.Contract(ticketOfficeAddress, ticketOfficeAbi, provider);
+            const eventDetails = await ticketOfficeContract.getEventDetails(eventId);
+            vueEventId.message = String(eventId)
+            eventName.message = String(eventDetails[0])
+            eventDescription.message = String(eventDetails[1])
+            eventLocation.message = String(eventDetails[2])
+            eventStartDate.message = String(eventDetails[3])
+            eventEndDate.message = String(eventDetails[4])
+            eventTicketPrice.message = String(ethers.utils.formatEther(eventDetails[5]) + '(ETH)')
+            eventTotalTickets.message = String(eventDetails[6])
+            eventTicketsSold.message = String(eventDetails[7])
+            eventIsCanceled.message = String(eventDetails[8])
+            console.log(eventDetails);
+        }
+
+        // Modern DApp Browsers
+        if (window.ethereum) {
+            web3 = new Web3(window.ethereum);
+            try {
+                window.ethereum.enable().then(function () {
+                    console.log('User has allowed account access to DApp...');
+                    getInfo();
+                    getEventDetails();
+                    //createNewEvent();
+                });
+            } catch (e) {
+                console.log('User has denied account access to DApp...');
+            }
+        }
+// Legacy DApp Browsers
+        else if (window.web3) {
+            web3 = new Web3(web3.currentProvider);
+            console.log('Legacy DApp Browsers');
+            getInfo();
+            getEventDetails();
+        }
+// Non-DApp Browsers
+        else {
+            console.log('Non-DApp Browsers');
+            alert('You have to install MetaMask !');
+        }
+
+    </script>
+
+{% endblock %}
