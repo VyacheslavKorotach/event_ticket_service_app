@@ -24,9 +24,16 @@ def event_service_list(request):
 def event_details(request):
     template = loader.get_template('event_service/event_details.html')
     sent = False
-    contract_address = "0xeD0eCBeD8269f54DB2882a6Eb00597644C775b44"
     context = {
         'sent': sent,
-        'contract': contract_address,
+    }
+    return HttpResponse(template.render(context, request))
+
+
+def create_new(request):
+    template = loader.get_template('event_service/create_new.html')
+    sent = False
+    context = {
+        'sent': sent,
     }
     return HttpResponse(template.render(context, request))

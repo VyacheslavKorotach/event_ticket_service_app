@@ -22,11 +22,13 @@
         <ol>
             <li v-for="event in events">
                 <b>[[ event.text ]]</b>
-                <!--<a :href="'/job/' + r.id">[[ event.text ]]</a>-->
                 <a :href="'/event_service/details/?eventId=' + event.text"><b>details</b></a>
             </li>
         </ol>
     </div>
+
+    <p>  </p>
+    <p><a  href="{% url 'create_new' %}"><b>(+) Creat new event</b></a></p>
 
     <script>
 
@@ -43,9 +45,6 @@
             el: '#your_event_list',
             data: {
                 events: [
-                   // { text: 'Learn JavaScript' },
-                   // { text: 'Learn Vue' },
-                   // { text: 'Build something awesome' }
                 ],
             }
         })
@@ -58,17 +57,10 @@
             // send ether and pay to change state within the blockchain.
             // For this, we need the account signer...
             const signer = provider.getSigner();
-            console.log(signer);
-            //console.log(provider.getBlockNumber());
             const signerAddress = await signer.getAddress( );
-            //let balance = await getBal(signerAddress);
-            console.log(signerAddress);
             const network = await provider.getNetwork( );
-            console.log(network);
-            // Get the balance of an account (by address or ENS name, if supported by network)
             let balance = await provider.getBalance(signerAddress);
             let balanceEth = ethers.utils.formatEther(balance);
-            console.log(balanceEth);
             app.message = String(signerAddress) + ' Network: ' + network.name.toUpperCase() + '. Balance: ' + String(balanceEth) + ' ETH';
         }
 
@@ -76,26 +68,14 @@
             const provider = await new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
             const signerAddress = await signer.getAddress( );
-            const ticketOfficeAddress = "0xeD0eCBeD8269f54DB2882a6Eb00597644C775b44";
+            const ticketOfficeAddress = Contract_address;
             const ticketOfficeAbi = eventServiceABI;
             const ticketOfficeContract = new ethers.Contract(ticketOfficeAddress, ticketOfficeAbi, provider);
             const myEventList = await ticketOfficeContract.getOwnerEvents(signerAddress);
-            //console.log(ticketOfficeAbi);
             console.log(myEventList);
-            for(let i=0; i<myEventList.length; i++) {
+            for(let i=0; i < myEventList.length; i++) {
                 your_event_list.events.push({ text: String(myEventList[i]) });
             }
-        }
-
-        async function createNewEvent() {
-            const provider = await new ethers.providers.Web3Provider(window.ethereum);
-            const signer = provider.getSigner();
-            const signerAddress = await signer.getAddress( );
-            const ticketOfficeAddress = "0xeD0eCBeD8269f54DB2882a6Eb00597644C775b44";
-            const ticketOfficeAbi = eventServiceABI;
-            const ticketOfficeContract = new ethers.Contract(ticketOfficeAddress, ticketOfficeAbi, provider);
-            const contractWithSigner = ticketOfficeContract.connect(signer);
-            const tx = contractWithSigner.createNewEvent("event5", "descr5", "location5", "startDate5", "endDate5", 100, "10");
         }
 
         // Modern DApp Browsers

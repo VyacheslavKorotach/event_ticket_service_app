@@ -1,12 +1,100 @@
 {% extends 'base.html' %}
 {% block main %}
 
-    <h4  class="text-center">Ticket Office</h4>
+    <h4 class="text-center">Ticket Management Page</h4>
     <center>
         <p></p>
-        <p>Welcome to our Ticket Office!</p>
+        <p>Welcome to our Ticket Control Center!</p>
         <p>Here you can manage your tickets.</p>
     </center>
-    <!-- <p><center><a  href="{% url 'ticket_service' %}"><b>refresh the page</b></a></center></p> -->
+    <p><b>Your current address detected as:</b></p>
+    <center>
+        <div id="vue-app">
+            [[ message ]]
+        </div>
+
+    </center>
+
+    <p></p>
+    <p><b>Your ticket IDs: </b></p>
+
+    <div id="your_ticket_list">
+        <ol>
+            <li v-for="ticket in tickets">
+                <b>[[ ticket.text ]]</b>
+                <a :href="'/ticket_service/details/?ticketId=' + ticket.text"><b>details</b></a>
+            </li>
+        </ol>
+    </div>
+
+    <script>
+
+        var app = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-app',
+            data: {
+                message: 'Not detected. Refresh page and connect to Metamask.'
+            }
+        })
+
+        var your_ticket_list = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#your_ticket_list',
+            data: {
+                tickets: [],
+            }
+        })
+
+        async function getInfo() {
+            const provider = await new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            const signerAddress = await signer.getAddress();
+            const network = await provider.getNetwork();
+            let balance = await provider.getBalance(signerAddress);
+            let balanceEth = ethers.utils.formatEther(balance);
+            app.message = String(signerAddress) + ' Network: ' + network.name.toUpperCase() + '. Balance: ' + String(balanceEth) + ' ETH';
+        }
+
+        async function getMyTickets() {
+            const provider = await new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            const signerAddress = await signer.getAddress();
+            const ticketOfficeAddress = Contract_address;
+            const ticketOfficeAbi = eventServiceABI;
+            const ticketOfficeContract = new ethers.Contract(ticketOfficeAddress, ticketOfficeAbi, provider);
+            const myTicketList = await ticketOfficeContract.getOwnerEvents(signerAddress);
+            console.log(myTicketList);
+            for (let i = 0; i < myTicketList.length; i++) {
+                your_ticket_list.tickets.push({text: String(myTicketList[i])});
+            }
+        }
+
+        // Modern DApp Browsers
+        if (window.ethereum) {
+            web3 = new Web3(window.ethereum);
+            try {
+                window.ethereum.enable().then(function () {
+                    console.log('User has allowed account access to DApp...');
+                    getInfo();
+                    getMyTickets();
+                });
+            } catch (e) {
+                console.log('User has denied account access to DApp...');
+            }
+        }
+// Legacy DApp Browsers
+        else if (window.web3) {
+            web3 = new Web3(web3.currentProvider);
+            console.log('Legacy DApp Browsers');
+            getInfo();
+            getMyTickets();
+        }
+// Non-DApp Browsers
+        else {
+            console.log('Non-DApp Browsers');
+            alert('You have to install MetaMask !');
+        }
+
+    </script>
 
 {% endblock %}

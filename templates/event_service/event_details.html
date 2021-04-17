@@ -5,7 +5,7 @@
     <center>
         <p></p>
         <p>Welcome to our Event Control Center!</p>
-        <p>Here you can see the details of the event or buy a ticket.
+        <p>Here you can see the details of the event and buy a ticket.
             Also you can withdraw money or cancel event
             if you are the Event Organizer.</p>
     </center>
@@ -20,7 +20,7 @@
 
     <p></p>
     <p><b>The event details: </b></p>
-    <table cellpadding="5" , align="center">
+    <table cellpadding="3" , align="center">
         <tr>
             <td>
                 <div id="vue-eventId"><b>Event ID: </b><i> [[ message ]] </i></div>
@@ -62,10 +62,61 @@
             </td>
         </tr>
     </table>
+
+    <table cellpadding="20" , align="center">
+        <tr>
+            <td>
+                <div id="vue-eventCancelButton">
+                    <p>[[ message ]]</p>
+                    <button @click="cancelEvent">Cancel Event</button>
+                </div>
+            </td>
+            <td>
+                <div id="vue-buyTicketButton">
+                    <p>[[ message ]]</p>
+                    <button @click="buyTicket">Buy Ticket</button>
+                </div>
+            </td>
+            <td>
+                <div id="vue-withdrawButton">
+                    <p>[[ message ]]</p>
+                    <button @click="withdraw">Withdraw</button>
+                </div>
+            </td>
+        </tr>
+
+    </table>
+
+    <div id="app-modal">
+        <!-- use the modal component, pass in the prop -->
+        <modal v-if="showModal" @close="showModal = false">
+            <h3 slot="header">[[ header ]]</h3>
+            <h5 slot="body">[[ message ]]</h5>
+        </modal>
+    </div>
+
     <script>
 
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('eventId');
+
+        let ticketPrice;
+
+        // register modal component
+        Vue.component("modal", {
+            template: "#modal-template"
+        });
+
+        // start modal
+        var eventModal = new Vue({
+            delimiters: ["[[", "]]"],
+            el: "#app-modal",
+            data: {
+                showModal: false,
+                header: 'Sending to blockchain..',
+                message: 'Something went wrong'
+            }
+        });
 
         var app = new Vue({
             delimiters: ["[[", "]]"],
@@ -155,6 +206,120 @@
             }
         })
 
+        var buyTicketButton = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-buyTicketButton',
+            data: {
+                message: ''
+            },
+            methods: {
+                buyTicket: async function () {
+                    const provider = await new ethers.providers.Web3Provider(window.ethereum);
+                    const signer = provider.getSigner();
+                    const ticketOfficeAddress = Contract_address;
+                    const ticketOfficeAbi = eventServiceABI;
+                    const ticketOfficeContract = new ethers.Contract(ticketOfficeAddress, ticketOfficeAbi, provider);
+                    const contractWithSigner = ticketOfficeContract.connect(signer);
+                    let tx;
+                    try {
+                        tx = await contractWithSigner.buyTicket(eventId, {value: ticketPrice});
+                        if (tx.hash) {
+                            console.log('Transaction Hash: ' + tx.hash);
+                            eventModal.message = 'Successfully bought';
+                            {#this.message = 'Transaction Hash: ' + tx.hash;#}
+                            this.message = 'Ticket bought';
+                            eventModal.showModal = true;
+                        } else {
+                            eventModal.message = 'Something went wrong';
+                            this.message = 'Transaction Hash: undefined';
+                            eventModal.showModal = true;
+                        }
+                    } catch {
+                        console.log('Error of the ticket buying');
+                        eventModal.message = 'Something went wrong';
+                        this.message = 'Transaction Hash: undefined';
+                        eventModal.showModal = true;
+                    }
+                }
+            }
+        })
+
+        var cancelEventButton = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-eventCancelButton',
+            data: {
+                message: ''
+            },
+            methods: {
+                cancelEvent: async function () {
+                    const provider = await new ethers.providers.Web3Provider(window.ethereum);
+                    const signer = provider.getSigner();
+                    const ticketOfficeAddress = Contract_address;
+                    const ticketOfficeAbi = eventServiceABI;
+                    const ticketOfficeContract = new ethers.Contract(ticketOfficeAddress, ticketOfficeAbi, provider);
+                    const contractWithSigner = ticketOfficeContract.connect(signer);
+                    let tx;
+                    try {
+                        tx = await contractWithSigner.cancelEvent(eventId);
+                        if (tx.hash) {
+                            console.log('Transaction Hash: ' + tx.hash);
+                            eventModal.message = 'Successfully canceled';
+                            this.message = 'Event canceled';
+                            eventIsCanceled.message = 'true';
+                            eventModal.showModal = true;
+                        } else {
+                            eventModal.message = 'Something went wrong';
+                            this.message = 'Only for owner';
+                            eventModal.showModal = true;
+                        }
+                    } catch {
+                        console.log('Error of the event canceling');
+                        eventModal.message = 'Something went wrong';
+                        this.message = 'Only for owner';
+                        eventModal.showModal = true;
+                    }
+                }
+            }
+        })
+
+        var withdrawButton = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-withdrawButton',
+            data: {
+                message: ''
+            },
+            methods: {
+                withdraw: async function () {
+                    const provider = await new ethers.providers.Web3Provider(window.ethereum);
+                    const signer = provider.getSigner();
+                    const ticketOfficeAddress = Contract_address;
+                    const ticketOfficeAbi = eventServiceABI;
+                    const ticketOfficeContract = new ethers.Contract(ticketOfficeAddress, ticketOfficeAbi, provider);
+                    const contractWithSigner = ticketOfficeContract.connect(signer);
+                    let tx;
+                    try {
+                        tx = await contractWithSigner.withdraw(eventId);
+                        if (tx.hash) {
+                            console.log('Transaction Hash: ' + tx.hash);
+                            eventModal.message = 'Successfully withdrawn';
+                            this.message = 'withdrawn';
+                            eventModal.showModal = true;
+                        } else {
+                            eventModal.message = 'Something went wrong';
+                            this.message = 'Only for owner';
+                            eventModal.showModal = true;
+                        }
+                    } catch {
+                        console.log('Error of the withdrawal');
+                        eventModal.message = 'Something went wrong';
+                        this.message = 'Only for owner';
+                        eventModal.showModal = true;
+                    }
+                }
+            }
+        })
+
+
         async function getInfo() {
             // A Web3Provider wraps a standard Web3 provider, which is
             // what Metamask injects as window.ethereum into each page
@@ -163,40 +328,36 @@
             // send ether and pay to change state within the blockchain.
             // For this, we need the account signer...
             const signer = provider.getSigner();
-            console.log(signer);
-            //console.log(provider.getBlockNumber());
             const signerAddress = await signer.getAddress();
-            //let balance = await getBal(signerAddress);
-            console.log(signerAddress);
             const network = await provider.getNetwork();
-            console.log(network);
             // Get the balance of an account (by address or ENS name, if supported by network)
             let balance = await provider.getBalance(signerAddress);
             let balanceEth = ethers.utils.formatEther(balance);
-            console.log(balanceEth);
             app.message = String(signerAddress) + ' Network: ' + network.name.toUpperCase() + '. Balance: ' + String(balanceEth) + ' ETH';
-            console.log(eventId);
         }
 
         async function getEventDetails() {
             const provider = await new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
             const signerAddress = await signer.getAddress();
-            const ticketOfficeAddress = "0xeD0eCBeD8269f54DB2882a6Eb00597644C775b44";
+            const ticketOfficeAddress = Contract_address;
             const ticketOfficeAbi = eventServiceABI;
             const ticketOfficeContract = new ethers.Contract(ticketOfficeAddress, ticketOfficeAbi, provider);
             const eventDetails = await ticketOfficeContract.getEventDetails(eventId);
-            vueEventId.message = String(eventId)
-            eventName.message = String(eventDetails[0])
-            eventDescription.message = String(eventDetails[1])
-            eventLocation.message = String(eventDetails[2])
-            eventStartDate.message = String(eventDetails[3])
-            eventEndDate.message = String(eventDetails[4])
-            eventTicketPrice.message = String(ethers.utils.formatEther(eventDetails[5]) + '(ETH)')
-            eventTotalTickets.message = String(eventDetails[6])
-            eventTicketsSold.message = String(eventDetails[7])
-            eventIsCanceled.message = String(eventDetails[8])
-            console.log(eventDetails);
+            vueEventId.message = String(eventId);
+            eventName.message = String(eventDetails[0]);
+            eventDescription.message = String(eventDetails[1]);
+            eventLocation.message = String(eventDetails[2]);
+            eventStartDate.message = String(eventDetails[3]);
+            eventEndDate.message = String(eventDetails[4]);
+            ticketPrice = eventDetails[5];
+            eventTicketPrice.message = String(ethers.utils.formatEther(eventDetails[5]) + '(ETH)');
+            eventTotalTickets.message = String(eventDetails[6]);
+            eventTicketsSold.message = String(eventDetails[7]);
+            eventIsCanceled.message = String(eventDetails[8]);
+            if (eventDetails[8]) {
+                cancelEventButton.message = 'Event canceled';
+            }
         }
 
         // Modern DApp Browsers
@@ -207,7 +368,6 @@
                     console.log('User has allowed account access to DApp...');
                     getInfo();
                     getEventDetails();
-                    //createNewEvent();
                 });
             } catch (e) {
                 console.log('User has denied account access to DApp...');

@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% block main %}
+
+    <h4 class="text-center">Event Management Page</h4>
+    <center>
+        <p></p>
+        <p>Welcome to our Event Control Center!</p>
+        <p>Fill form to create new event</p>
+    </center>
+    <p><b>Your current address detected as:</b></p>
+
+    <center>
+        <div id="vue-app">
+            [[ message ]]
+        </div>
+    </center>
+
+    <p></p>
+    <p><b>Fill the event details: </b></p>
+    <table cellpadding="3">
+        <tr>
+            <td>Name:</td>
+            <td>
+                <div id="vue-name"><input v-model="message" placeholder="edit the name"></div>
+            </td>
+        </tr>
+        <tr>
+            <td>Description:</td>
+            <td>
+                <div id="vue-description"><textarea v-model="message" placeholder="edit the description"></textarea>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td>Location:</td>
+            <td>
+                <div id="vue-location"><input v-model="message" placeholder="edit the location"></div>
+            </td>
+        </tr>
+        <tr>
+            <td>Start Date:</td>
+            <td>
+                <div id="vue-startDate"><input v-model="message" placeholder="2021-04-16"></div>
+            </td>
+        </tr>
+        <tr>
+            <td>End Date:</td>
+            <td>
+                <div id="vue-endDate"><input v-model="message" placeholder="2021-04-18"></div>
+            </td>
+        </tr>
+        <tr>
+            <td>Ticket Price:</td>
+            <td>
+                <div id="vue-ticketPrice"><input v-model.number="message" type="number" placeholder="0.001 (ETH)"></div>
+            </td>
+        </tr>
+        <tr>
+            <td>Total Tickets:</td>
+            <td>
+                <div id="vue-totalTickets"><input v-model.number="message" type="number" placeholder="200 (items)">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <div id="vue-confirmForm">
+                    <p>[[ message ]]</p>
+                    <button @click="sendForm">Confirm Form</button>
+                </div>
+            </td>
+        </tr>
+    </table>
+    <div id="app-modal">
+        <!-- use the modal component, pass in the prop -->
+        <modal v-if="showModal" @close="showModal = false">
+            <h3 slot="header">[[ header ]]</h3>
+            <h5 slot="body">[[ message ]]</h5>
+        </modal>
+    </div>
+
+    <script>
+
+        // register modal component
+        Vue.component("modal", {
+            template: "#modal-template"
+        });
+
+        // start modal
+        var eventModal = new Vue({
+            delimiters: ["[[", "]]"],
+            el: "#app-modal",
+            data: {
+                showModal: false,
+                header: 'Sending to blockchain..',
+                message: 'Something went wrong'
+            }
+        });
+
+        // describe new event form
+        var app = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-app',
+            data: {
+                message: 'Not detected. Refresh page and connect to Metamask.'
+            }
+        })
+
+        var eventName = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-name',
+            data: {
+                message: ''
+            }
+        })
+
+        var eventDescription = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-description',
+            data: {
+                message: ''
+            }
+        })
+
+        var eventLocation = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-location',
+            data: {
+                message: ''
+            }
+        })
+
+        var eventStartDate = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-startDate',
+            data: {
+                message: ''
+            }
+        })
+
+        var eventEndDate = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-endDate',
+            data: {
+                message: ''
+            }
+        })
+
+        var eventTicketPrice = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-ticketPrice',
+            data: {
+                message: ''
+            }
+        })
+
+        var eventTotalTickets = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-totalTickets',
+            data: {
+                message: ''
+            }
+        })
+
+        var eventConfirmForm = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-confirmForm',
+            data: {
+                message: ''
+            },
+            methods: {
+                sendForm: async function () {
+                    const provider = await new ethers.providers.Web3Provider(window.ethereum);
+                    const signer = provider.getSigner();
+                    const ticketOfficeAddress = Contract_address;
+                    const ticketOfficeAbi = eventServiceABI;
+                    const ticketOfficeContract = new ethers.Contract(ticketOfficeAddress, ticketOfficeAbi, provider);
+                    const contractWithSigner = ticketOfficeContract.connect(signer);
+                    let tx;
+                    try {
+                        tx = await contractWithSigner.createNewEvent(
+                            eventName.message,
+                            eventDescription.message,
+                            eventLocation.message,
+                            eventStartDate.message,
+                            eventEndDate.message,
+                            String(ethers.utils.parseEther(String(eventTicketPrice.message))),
+                            String(eventTotalTickets.message));
+                        if (tx.hash) {
+                            eventModal.message = 'Successfully completed';
+                            this.message = 'Transaction Hash: ' + tx.hash;
+                            eventModal.showModal = true;
+                        } else {
+                            eventModal.message = 'Something went wrong';
+                            this.message = 'Transaction Hash: undefined';
+                            eventModal.showModal = true;
+                        }
+                    } catch {
+                        eventModal.message = 'Something went wrong';
+                        this.message = 'Transaction Hash: undefined';
+                        eventModal.showModal = true;
+                    }
+                }
+            }
+        })
+
+        async function getInfo() {
+            const provider = await new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            const signerAddress = await signer.getAddress();
+            const network = await provider.getNetwork();
+            let balance = await provider.getBalance(signerAddress);
+            let balanceEth = ethers.utils.formatEther(balance);
+            app.message = String(signerAddress) + ' Network: ' + network.name.toUpperCase() + '. Balance: ' + String(balanceEth) + ' ETH';
+        }
+
+
+        // Modern DApp Browsers
+        if (window.ethereum) {
+            web3 = new Web3(window.ethereum);
+            try {
+                window.ethereum.enable().then(function () {
+                    console.log('User has allowed account access to DApp...');
+                    getInfo();
+                });
+            } catch (e) {
+                console.log('User has denied account access to DApp...');
+            }
+        }
+// Legacy DApp Browsers
+        else if (window.web3) {
+            web3 = new Web3(web3.currentProvider);
+            console.log('Legacy DApp Browsers');
+            getInfo();
+        }
+// Non-DApp Browsers
+        else {
+            console.log('Non-DApp Browsers');
+            alert('You have to install MetaMask !');
+        }
+
+    </script>
+
+{% endblock %}

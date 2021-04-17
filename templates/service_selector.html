@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
 {% block main %}
 
-    <h4  class="text-center">Chose the category</h4>
-    <p></p>
-    <p><center><a  href="{% url 'event_service' %}"><b>Event Management</b></a> |
-    <a  href="{% url 'ticket_service' %}"><b>Ticket Office</b></a></center></p>
-
-
+{#    <h4 class="text-center">Chose the category</h4>#}
+    <center>
+{#        <p></p>#}
+{#        <p><a href="{% url 'event_service' %}"><b>Event Management</b></a> |#}
+{#            <a href="{% url 'ticket_service' %}"><b>Ticket Office</b></a></p>#}
+        <p><img src="http://korotach.com/web3-test/ticket-office.jpg" alt="Ticket Office"></p>
+    </center>
 {% endblock %}
