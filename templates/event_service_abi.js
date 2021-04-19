@@ -412,7 +412,7 @@ var eventServiceABI = [
     },
     {
         "inputs": [],
-        "name": "getActiveEvnts",
+        "name": "getActiveEvents",
         "outputs": [
             {
                 "internalType": "uint256[]",
@@ -944,11 +944,6 @@ var eventServiceABI = [
                 "type": "uint256"
             },
             {
-                "internalType": "uint256",
-                "name": "ticketId",
-                "type": "uint256"
-            },
-            {
                 "internalType": "address",
                 "name": "owner",
                 "type": "address"
@@ -957,9 +952,9 @@ var eventServiceABI = [
         "name": "checkTicket",
         "outputs": [
             {
-                "internalType": "bool",
+                "internalType": "uint256",
                 "name": "",
-                "type": "bool"
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",
@@ -991,6 +986,20 @@ var eventServiceABI = [
         "type": "function"
     },
     {
+        "inputs": [],
+        "name": "getSenderBalance",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function",
+        "constant": true
+    },
+    {
         "inputs": [
             {
                 "internalType": "uint256",
@@ -1002,5 +1011,25 @@ var eventServiceABI = [
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            }
+        ],
+        "name": "getOwnerTickets",
+        "outputs": [
+            {
+                "internalType": "uint256[]",
+                "name": "",
+                "type": "uint256[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function",
+        "constant": true
     }
 ]
