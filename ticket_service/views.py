@@ -20,3 +20,12 @@ def ticket_service_list(request):
         'form': form,
     }
     return HttpResponse(template.render(context, request))
+
+
+def ticket_details(request):
+    template = loader.get_template('ticket_service/ticket_details.html')
+    sent = False
+    context = {
+        'sent': sent,
+    }
+    return HttpResponse(template.render(context, request))

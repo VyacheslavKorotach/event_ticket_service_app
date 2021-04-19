@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% block main %}
+
+    <h4 class="text-center">Ticket Management Page</h4>
+    <center>
+        <p></p>
+        <p>Welcome to our Ticket Control Center!</p>
+        <p>Here you can see the details of the ticket and transfer it,
+            if you are the Ticket Owner.</p>
+    </center>
+    <p><b>Your current address detected as:</b></p>
+
+    <center>
+        <div id="vue-app">
+            [[ message ]]
+        </div>
+
+    </center>
+
+    <p></p>
+    <p><b>The ticket details: </b></p>
+    <table cellpadding="3" , align="center">
+        <tr>
+            <td>
+                <div id="vue-ticketId"><b>Ticket ID: </b><i> [[ message ]] </i></div>
+            </td>
+            <td>
+                <div id="vue-name"><b>Name: </b><i>[[ message ]]</i></div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div id="vue-symbol"><b>Symbol: </b><i>[[ message ]]</i></div>
+            </td>
+            <td>
+                <div id="vue-owner"><b>Owner: </b><i>[[ message ]]</i></div>
+            </td>
+        </tr>
+    </table>
+
+    <table cellpadding="20" , align="center">
+        <tr>
+            <td>
+
+            </td>
+            <td>
+                <div id="vue-transferTicketButton">
+                    <p>[[ message ]]</p>
+                    <button @click="transferTicket">Transfer Ticket</button>
+                </div>
+            </td>
+            <td>
+
+            </td>
+        </tr>
+
+    </table>
+
+    <div id="app-modal">
+        <!-- use the modal component, pass in the prop -->
+        <modal v-if="showModal" @close="showModal = false">
+            <h3 slot="header">[[ header ]]</h3>
+            <h5 slot="body">[[ message ]]</h5>
+        </modal>
+    </div>
+
+    <script>
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const ticketId = urlParams.get('ticketId');
+
+        let ticketPrice;
+
+        // register modal component
+        Vue.component("modal", {
+            template: "#modal-template"
+        });
+
+        // start modal
+        var ticketModal = new Vue({
+            delimiters: ["[[", "]]"],
+            el: "#app-modal",
+            data: {
+                showModal: false,
+                header: 'Sending to blockchain..',
+                message: 'Something went wrong'
+            }
+        });
+
+        var app = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-app',
+            data: {
+                message: 'Not detected. Refresh page and connect to Metamask.'
+            }
+        })
+
+        var vueTicketId = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-ticketId',
+            data: {
+                message: ''
+            }
+        })
+
+        var ticketName = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-name',
+            data: {
+                message: ''
+            }
+        })
+
+        var ticketSymbol = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-symbol',
+            data: {
+                message: ''
+            }
+        })
+
+        var ticketOwner = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-owner',
+            data: {
+                message: ''
+            }
+        })
+
+        var transferTicketButton = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-transferTicketButton',
+            data: {
+                message: ''
+            },
+            methods: {
+                transferTicket: async function () {
+                    const provider = await new ethers.providers.Web3Provider(window.ethereum);
+                    const signer = provider.getSigner();
+                    const ticketOfficeAddress = Contract_address;
+                    const ticketOfficeAbi = eventServiceABI;
+                    const ticketOfficeContract = new ethers.Contract(ticketOfficeAddress, ticketOfficeAbi, provider);
+                    const contractWithSigner = ticketOfficeContract.connect(signer);
+                    let tx;
+                    try {
+                        tx = await contractWithSigner.buyTicket(ticketId, {value: ticketPrice});
+                        if (tx.hash) {
+                            console.log('Transaction Hash: ' + tx.hash);
+                            ticketModal.message = 'Successfully bought';
+                            {#this.message = 'Transaction Hash: ' + tx.hash;#}
+                            this.message = 'Ticket bought';
+                            ticketModal.showModal = true;
+                        } else {
+                            ticketModal.message = 'Something went wrong';
+                            this.message = 'Transaction Hash: undefined';
+                            ticketModal.showModal = true;
+                        }
+                    } catch {
+                        console.log('Error of the ticket buying');
+                        ticketModal.message = 'Something went wrong';
+                        this.message = 'Transaction Hash: undefined';
+                        ticketModal.showModal = true;
+                    }
+                }
+            }
+        })
+
+        async function getInfo() {
+            // A Web3Provider wraps a standard Web3 provider, which is
+            // what Metamask injects as window.ethereum into each page
+            const provider = await new ethers.providers.Web3Provider(window.ethereum);
+            // The provider also allows signing transactions to
+            // send ether and pay to change state within the blockchain.
+            // For this, we need the account signer...
+            const signer = provider.getSigner();
+            const signerAddress = await signer.getAddress();
+            const network = await provider.getNetwork();
+            // Get the balance of an account (by address or ENS name, if supported by network)
+            let balance = await provider.getBalance(signerAddress);
+            let balanceEth = ethers.utils.formatEther(balance);
+            app.message = String(signerAddress) + ' Network: ' + network.name.toUpperCase() + '. Balance: ' + String(balanceEth) + ' ETH';
+        }
+
+        async function getTicketDetails() {
+            const provider = await new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            const signerAddress = await signer.getAddress();
+            const ticketOfficeAddress = Contract_address;
+            const ticketOfficeAbi = eventServiceABI;
+            const ticketOfficeContract = new ethers.Contract(ticketOfficeAddress, ticketOfficeAbi, provider);
+            const ticketDetails = await ticketOfficeContract.getEventDetails(ticketId);
+            vueTicketId.message = String(ticketId);
+            ticketName.message = String(ticketDetails[0]);
+            ticketSymbol.message = String(ticketDetails[1]);
+            ticketOwner.message = String(ticketDetails[2]);
+        }
+
+        // Modern DApp Browsers
+        if (window.ethereum) {
+            web3 = new Web3(window.ethereum);
+            try {
+                window.ethereum.enable().then(function () {
+                    console.log('User has allowed account access to DApp...');
+                    getInfo();
+                    getTicketDetails();
+                });
+            } catch (e) {
+                console.log('User has denied account access to DApp...');
+            }
+        }
+// Legacy DApp Browsers
+        else if (window.web3) {
+            web3 = new Web3(web3.currentProvider);
+            console.log('Legacy DApp Browsers');
+            getInfo();
+            getTicketDetails();
+        }
+// Non-DApp Browsers
+        else {
+            console.log('Non-DApp Browsers');
+            alert('You have to install MetaMask !');
+        }
+
+    </script>
+
+{% endblock %}
