@@ -18,25 +18,11 @@
     </center>
 
     <p></p>
-    <p><b>The ticket details: </b></p>
-    <table cellpadding="3" , align="center">
-        <tr>
-            <td>
-                <div id="vue-ticketId"><b>Ticket ID: </b><i> [[ message ]] </i></div>
-            </td>
-            <td>
-                <div id="vue-name"><b>Name: </b><i>[[ message ]]</i></div>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <div id="vue-symbol"><b>Symbol: </b><i>[[ message ]]</i></div>
-            </td>
-            <td>
-                <div id="vue-owner"><b>Owner: </b><i>[[ message ]]</i></div>
-            </td>
-        </tr>
-    </table>
+    <p><b>The ticket (ERC721) details: </b></p>
+    <div id="vue-ticketId"><b>Ticket ID: </b><i> [[ message ]] </i></div>
+    <div id="vue-name"><b>Name: </b><i>[[ message ]]</i></div>
+    <div id="vue-symbol"><b>Symbol: </b><i>[[ message ]]</i></div>
+    <div id="vue-owner"><b>Owner: </b><i>[[ message ]]</i></div>
 
     <table cellpadding="20" , align="center">
         <tr>
@@ -184,18 +170,14 @@
         async function getTicketDetails() {
             const provider = await new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
-            const signerAddress = await signer.getAddress();
             const ticketOfficeAddress = Contract_address;
             const ticketOfficeAbi = eventServiceABI;
             const ticketOfficeContract = new ethers.Contract(ticketOfficeAddress, ticketOfficeAbi, provider);
-            {#const ticketDetails = await ticketOfficeContract.getEventDetails(ticketId);#}
             const getTicketName = await ticketOfficeContract.name();
             const getTicketSymbol = await ticketOfficeContract.symbol();
             const getTicketOwner = await ticketOfficeContract.ownerOf(ticketId);
-            console.log(getTicketName);
-            console.log(getTicketSymbol);
             vueTicketId.message = String(ticketId);
-            {#ticketName.message = ticketName;#}
+            ticketName.message = getTicketName;
             ticketSymbol.message = getTicketSymbol;
             ticketOwner.message = String(getTicketOwner);
         }
