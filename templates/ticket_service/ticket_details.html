@@ -188,11 +188,16 @@
             const ticketOfficeAddress = Contract_address;
             const ticketOfficeAbi = eventServiceABI;
             const ticketOfficeContract = new ethers.Contract(ticketOfficeAddress, ticketOfficeAbi, provider);
-            const ticketDetails = await ticketOfficeContract.getEventDetails(ticketId);
+            {#const ticketDetails = await ticketOfficeContract.getEventDetails(ticketId);#}
+            const getTicketName = await ticketOfficeContract.name();
+            const getTicketSymbol = await ticketOfficeContract.symbol();
+            const getTicketOwner = await ticketOfficeContract.ownerOf(ticketId);
+            console.log(getTicketName);
+            console.log(getTicketSymbol);
             vueTicketId.message = String(ticketId);
-            ticketName.message = String(ticketDetails[0]);
-            ticketSymbol.message = String(ticketDetails[1]);
-            ticketOwner.message = String(ticketDetails[2]);
+            {#ticketName.message = ticketName;#}
+            ticketSymbol.message = getTicketSymbol;
+            ticketOwner.message = String(getTicketOwner);
         }
 
         // Modern DApp Browsers
