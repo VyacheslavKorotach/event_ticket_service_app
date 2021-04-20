@@ -27,16 +27,15 @@
     <table cellpadding="20" , align="center">
         <tr>
             <td>
-
+                Transfer ticket to:
+                <div id="vue-transferTo"><input v-model="message"
+                                                placeholder="0x20B3D3677D52EC8480708A34A2EbAAB7ba2Cc4C2"></div>
             </td>
             <td>
                 <div id="vue-transferTicketButton">
                     <p>[[ message ]]</p>
-                    <button @click="transferTicket">Transfer Ticket</button>
+                    <button @click="transferTicket">Complete transfer</button>
                 </div>
-            </td>
-            <td>
-
             </td>
         </tr>
 
@@ -113,6 +112,14 @@
             }
         })
 
+        var transferTicketTo = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-transferTo',
+            data: {
+                message: ''
+            }
+        })
+
         var transferTicketButton = new Vue({
             delimiters: ["[[", "]]"],
             el: '#vue-transferTicketButton',
@@ -129,22 +136,21 @@
                     const contractWithSigner = ticketOfficeContract.connect(signer);
                     let tx;
                     try {
-                        tx = await contractWithSigner.buyTicket(ticketId, {value: ticketPrice});
-                        if (tx.hash) {
-                            console.log('Transaction Hash: ' + tx.hash);
-                            ticketModal.message = 'Successfully bought';
-                            {#this.message = 'Transaction Hash: ' + tx.hash;#}
-                            this.message = 'Ticket bought';
+                        tx = await contractWithSigner.ticketTransfer(ticketId, transferTicketTo.message);
+                        if (tx) {
+                            console.log('Successfully transferred: ' + tx);
+                            ticketModal.message = 'Successfully transferred';
+                            this.message = 'Ticket transferred';
                             ticketModal.showModal = true;
                         } else {
                             ticketModal.message = 'Something went wrong';
-                            this.message = 'Transaction Hash: undefined';
+                            this.message = 'Something went wrong';
                             ticketModal.showModal = true;
                         }
                     } catch {
-                        console.log('Error of the ticket buying');
+                        console.log('Error of the ticket transferring');
                         ticketModal.message = 'Something went wrong';
-                        this.message = 'Transaction Hash: undefined';
+                        this.message = 'Only owner can transfer';
                         ticketModal.showModal = true;
                     }
                 }
