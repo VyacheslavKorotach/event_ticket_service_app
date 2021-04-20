@@ -17,10 +17,10 @@
 
     <p></p>
 
-    <table cellpadding="30", align="center">
+    <table cellpadding="10", align="center">
         <tr>
             <td>
-                <b>Your event IDs: </b>
+                <b>Events organized by you: </b>
 
                 <div id="your_event_list">
                     <ol>
@@ -30,9 +30,11 @@
                         </li>
                     </ol>
                 </div>
+                <a href="{% url 'create_new' %}"><b>(+) Creat new event</b></a>
             </td>
+            <td></td>
             <td>
-                <b>Active event IDs: </b>
+                <b>All active events: </b>
 
                 <div id="active_event_list">
                     <ol>
@@ -45,9 +47,6 @@
             </td>
         </tr>
     </table>
-
-    <p></p>
-    <p><a href="{% url 'create_new' %}"><b>(+) Creat new event</b></a></p>
 
     <script>
 
