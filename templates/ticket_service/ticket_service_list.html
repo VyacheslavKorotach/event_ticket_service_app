@@ -62,7 +62,7 @@
             const ticketOfficeAddress = Contract_address;
             const ticketOfficeAbi = eventServiceABI;
             const ticketOfficeContract = new ethers.Contract(ticketOfficeAddress, ticketOfficeAbi, provider);
-            const myTicketList = await ticketOfficeContract.getOwnerEvents(signerAddress);
+            const myTicketList = await ticketOfficeContract.getOwnerTickets(signerAddress);
             console.log(myTicketList);
             for (let i = 0; i < myTicketList.length; i++) {
                 your_ticket_list.tickets.push({text: String(myTicketList[i])});
