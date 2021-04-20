@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block main %}
 
-    <h4  class="text-center">Event Management Page</h4>
+    <h4 class="text-center">Event Management Page</h4>
     <center>
         <p></p>
         <p>Welcome to our Event Control Center!</p>
@@ -16,19 +16,38 @@
     </center>
 
     <p></p>
-    <p><b>Your event IDs: </b></p>
 
-    <div id="your_event_list">
-        <ol>
-            <li v-for="event in events">
-                <b>[[ event.text ]]</b>
-                <a :href="'/event_service/details/?eventId=' + event.text"><b>details</b></a>
-            </li>
-        </ol>
-    </div>
+    <table cellpadding="30", align="center">
+        <tr>
+            <td>
+                <b>Your event IDs: </b>
 
-    <p>  </p>
-    <p><a  href="{% url 'create_new' %}"><b>(+) Creat new event</b></a></p>
+                <div id="your_event_list">
+                    <ol>
+                        <li v-for="event in events">
+                            <b>[[ event.text ]]</b>
+                            <a :href="'/event_service/details/?eventId=' + event.text"><b>details</b></a>
+                        </li>
+                    </ol>
+                </div>
+            </td>
+            <td>
+                <b>Active event IDs: </b>
+
+                <div id="active_event_list">
+                    <ol>
+                        <li v-for="event in events">
+                            <b>[[ event.text ]]</b>
+                            <a :href="'/event_service/details/?eventId=' + event.text"><b>details</b></a>
+                        </li>
+                    </ol>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <p></p>
+    <p><a href="{% url 'create_new' %}"><b>(+) Creat new event</b></a></p>
 
     <script>
 
@@ -44,8 +63,15 @@
             delimiters: ["[[", "]]"],
             el: '#your_event_list',
             data: {
-                events: [
-                ],
+                events: [],
+            }
+        })
+
+        var active_event_list = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#active_event_list',
+            data: {
+                events: [],
             }
         })
 
@@ -57,8 +83,8 @@
             // send ether and pay to change state within the blockchain.
             // For this, we need the account signer...
             const signer = provider.getSigner();
-            const signerAddress = await signer.getAddress( );
-            const network = await provider.getNetwork( );
+            const signerAddress = await signer.getAddress();
+            const network = await provider.getNetwork();
             let balance = await provider.getBalance(signerAddress);
             let balanceEth = ethers.utils.formatEther(balance);
             app.message = String(signerAddress) + ' Network: ' + network.name.toUpperCase() + '. Balance: ' + String(balanceEth) + ' ETH';
@@ -67,14 +93,19 @@
         async function getMyEvents() {
             const provider = await new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
-            const signerAddress = await signer.getAddress( );
+            const signerAddress = await signer.getAddress();
             const ticketOfficeAddress = Contract_address;
             const ticketOfficeAbi = eventServiceABI;
             const ticketOfficeContract = new ethers.Contract(ticketOfficeAddress, ticketOfficeAbi, provider);
             const myEventList = await ticketOfficeContract.getOwnerEvents(signerAddress);
+            const activeEventList = await ticketOfficeContract.getActiveEvents();
             console.log(myEventList);
-            for(let i=0; i < myEventList.length; i++) {
-                your_event_list.events.push({ text: String(myEventList[i]) });
+            console.log(activeEventList);
+            for (let i = 0; i < myEventList.length; i++) {
+                your_event_list.events.push({text: String(myEventList[i])});
+            }
+            for (let i = 0; i < activeEventList.length; i++) {
+                active_event_list.events.push({text: String(activeEventList[i])});
             }
         }
 
@@ -82,13 +113,13 @@
         if (window.ethereum) {
             web3 = new Web3(window.ethereum);
             try {
-                window.ethereum.enable().then(function() {
+                window.ethereum.enable().then(function () {
                     console.log('User has allowed account access to DApp...');
                     getInfo();
                     getMyEvents();
                     //createNewEvent();
                 });
-            } catch(e) {
+            } catch (e) {
                 console.log('User has denied account access to DApp...');
             }
         }
