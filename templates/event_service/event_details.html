@@ -8,8 +8,7 @@
         <p>
         <div id="vue-eventOrganizer">
             Here you can see the details of the event and buy a ticket.
-            Also you can withdraw money or cancel event
-            if you are the Event Organizer:
+            Also you can cancel event if you are the Event Organizer:
             [[ message ]]
         </div>
         </p>
@@ -26,7 +25,8 @@
     <p></p>
     {#    <p><b>The event details: </b></p>#}
     <div id="vue-addTicketId"><b>The event details: </b><i>[[ message1 ]][[ message2 ]]</i>
-        <a :href="'/ticket_service/details/?ticketId=' + message2"><b>[[ details ]]</b></a> [[ message3 ]]</div>
+        <a :href="'/ticket_service/details/?ticketId=' + message2"><b>[[ details ]]</b></a> [[ message3 ]]
+    </div>
     <table cellpadding="3" , align="center">
         <tr>
             <td>
@@ -82,12 +82,6 @@
                 <div id="vue-buyTicketButton">
                     <p>[[ message ]]</p>
                     <button @click="buyTicket">Buy Ticket</button>
-                </div>
-            </td>
-            <td>
-                <div id="vue-withdrawButton">
-                    <p>[[ message ]]</p>
-                    <button @click="withdraw">Withdraw</button>
                 </div>
             </td>
         </tr>
@@ -257,13 +251,13 @@
                             eventModal.showModal = true;
                         } else {
                             eventModal.message = 'Something went wrong';
-                            this.message = 'Transaction Hash: undefined';
+                            this.message = "Can't buy";
                             eventModal.showModal = true;
                         }
                     } catch {
                         console.log('Error of the ticket buying');
                         eventModal.message = 'Something went wrong';
-                        this.message = 'Transaction Hash: undefined';
+                        this.message = "Can't buy";
                         eventModal.showModal = true;
                     }
                 }
@@ -307,44 +301,6 @@
                 }
             }
         })
-
-        var withdrawButton = new Vue({
-            delimiters: ["[[", "]]"],
-            el: '#vue-withdrawButton',
-            data: {
-                message: ''
-            },
-            methods: {
-                withdraw: async function () {
-                    const provider = await new ethers.providers.Web3Provider(window.ethereum);
-                    const signer = provider.getSigner();
-                    const ticketOfficeAddress = Contract_address;
-                    const ticketOfficeAbi = eventServiceABI;
-                    const ticketOfficeContract = new ethers.Contract(ticketOfficeAddress, ticketOfficeAbi, provider);
-                    const contractWithSigner = ticketOfficeContract.connect(signer);
-                    let tx;
-                    try {
-                        tx = await contractWithSigner.withdraw(eventId);
-                        if (tx.hash) {
-                            console.log('Transaction Hash: ' + tx.hash);
-                            eventModal.message = 'Successfully withdrawn';
-                            this.message = 'withdrawn';
-                            eventModal.showModal = true;
-                        } else {
-                            eventModal.message = 'Something went wrong';
-                            this.message = 'Only for owner';
-                            eventModal.showModal = true;
-                        }
-                    } catch {
-                        console.log('Error of the withdrawal');
-                        eventModal.message = 'Something went wrong';
-                        this.message = 'Only for owner';
-                        eventModal.showModal = true;
-                    }
-                }
-            }
-        })
-
 
         async function getInfo() {
             // A Web3Provider wraps a standard Web3 provider, which is
