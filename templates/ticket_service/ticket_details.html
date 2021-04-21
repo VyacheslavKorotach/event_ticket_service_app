@@ -23,6 +23,7 @@
     <div id="vue-name"><b>Name: </b><i>[[ message ]]</i></div>
     <div id="vue-symbol"><b>Symbol: </b><i>[[ message ]]</i></div>
     <div id="vue-owner"><b>Owner: </b><i>[[ message ]]</i></div>
+    <div id="vue-eventId"><b>This ticket issued to the event: </b><i>[[ message ]] </i><a :href="'/event_service/details/?eventId=' + message"><b>details</b></a></div>
 
     <table cellpadding="20" , align="center">
         <tr>
@@ -112,6 +113,14 @@
             }
         })
 
+        var vueEventId = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-eventId',
+            data: {
+                message: ''
+            }
+        })
+
         var transferTicketTo = new Vue({
             delimiters: ["[[", "]]"],
             el: '#vue-transferTo',
@@ -186,6 +195,7 @@
             ticketName.message = getTicketName;
             ticketSymbol.message = getTicketSymbol;
             ticketOwner.message = String(getTicketOwner);
+            vueEventId.message = await ticketOfficeContract.ticketToEvent(ticketId);
         }
 
         // Modern DApp Browsers

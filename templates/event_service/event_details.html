@@ -3,11 +3,16 @@
 
     <h4 class="text-center">Event Management Page</h4>
     <center>
-        <p></p>
-        <p>Welcome to our Event Control Center!</p>
-        <p>Here you can see the details of the event and buy a ticket.
+        {#        <p></p>#}
+        {#        <p>Welcome to our Event Control Center!</p>#}
+        <p>
+        <div id="vue-eventOrganizer">
+            Here you can see the details of the event and buy a ticket.
             Also you can withdraw money or cancel event
-            if you are the Event Organizer.</p>
+            if you are the Event Organizer:
+            [[ message ]]
+        </div>
+        </p>
     </center>
     <p><b>Your current address detected as:</b></p>
 
@@ -19,7 +24,9 @@
     </center>
 
     <p></p>
-    <p><b>The event details: </b></p>
+    {#    <p><b>The event details: </b></p>#}
+    <div id="vue-addTicketId"><b>The event details: </b><i>[[ message1 ]][[ message2 ]]</i>
+        <a :href="'/ticket_service/details/?ticketId=' + message2"><b>[[ details ]]</b></a> [[ message3 ]]</div>
     <table cellpadding="3" , align="center">
         <tr>
             <td>
@@ -126,6 +133,14 @@
             }
         })
 
+        var eventOrganizer = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-eventOrganizer',
+            data: {
+                message: ''
+            }
+        })
+
         var vueEventId = new Vue({
             delimiters: ["[[", "]]"],
             el: '#vue-eventId',
@@ -203,6 +218,17 @@
             el: '#vue-isCanceled',
             data: {
                 message: ''
+            }
+        })
+
+        var ifUserHaveTicket = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-addTicketId',
+            data: {
+                message1: '',
+                message2: '',
+                message3: '',
+                details: '',
             }
         })
 
@@ -357,6 +383,14 @@
             eventIsCanceled.message = String(eventDetails[8]);
             if (eventDetails[8]) {
                 cancelEventButton.message = 'Event canceled';
+            }
+            eventOrganizer.message = await ticketOfficeContract.eventOwnerOf(eventId);
+            const userTicketId = await ticketOfficeContract.checkTicket(eventId, signerAddress);
+            if (userTicketId > 0) {
+                ifUserHaveTicket.message1 = 'You have the ticket# ';
+                ifUserHaveTicket.message2 = userTicketId;
+                ifUserHaveTicket.details = '(details)';
+                ifUserHaveTicket.message3 = 'to this event';
             }
         }
 
