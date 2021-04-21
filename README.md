@@ -1,0 +1,1 @@
+Here is the version v.003 of the web application to communicate with a smart-contract in repository https://github.com/VyacheslavKorotach/event_ticket_service.git
